@@ -1,14 +1,14 @@
 CREATE TABLE bikeshare_trips (
-    bikeid INTEGER,
+    bikeid DOUBLE PRECISION,
     checkout_time TIME,
     duration_minutes INTEGER,
-    end_station_id INTEGER,
-    end_station_name VARCHAR(255),
-    month INTEGER,
-    start_station_id INTEGER,
-    start_station_name VARCHAR(255),
-    start_time TIMESTAMP,
-    subscriber_type VARCHAR(255),
-    trip_id INTEGER,
-    year INTEGER
+    end_station_id DOUBLE PRECISION,
+    end_station_name TEXT,
+    month DOUBLE PRECISION,
+    start_station_id DOUBLE PRECISION,
+    start_station_name TEXT,
+    start_time timestamp,
+    subscriber_type TEXT,
+    trip_id DOUBLE PRECISION,
+    year DOUBLE PRECISION
 );

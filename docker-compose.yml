@@ -9,12 +9,11 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: bikeshare_data
     volumes:
-      - ./data:/var/lib/postgresql/data
-      - ./dataset:/var/lib/postgresql/data/dataset
-      - ./sql:/var/lib/postgresql/data/sql
+      - ./data:/var/lib/postgresql/data_files
+      - ./dataset:/var/lib/postgresql/data_files/dataset
+      - ./sql:/docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
-    command: ["/bin/bash", "/var/lib/postgresql/data/sql/init.sh"]
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
