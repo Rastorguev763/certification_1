@@ -52,7 +52,7 @@
 
 - status: статус станции (активна, закрыта, перемещена, только ACL)
 
-### Задание.
+### Задание
 
 1. Используя СУБД Postgres написать запрос, который формирует таблицы соответствующие по структуре и типу полей из входных csv-файлов.
 
@@ -95,3 +95,81 @@ docker-compose up -d
 ```
 
 4. Для работы с PostgreSQL используйте [эту](https://github.com/Rastorguev763/docker_example/tree/master#шаг-4-запуск-контейнера-postgresql-с-помощью-docker-compose) инструкцию.
+
+## Запросы
+
+Для формирования таблицы для каждого года (с 2013 по 2017) следующего содержания:
+
+- уникальный идентификатор станции
+
+- количество начавшихся поездок в данной станции за данных год
+
+- количество завершенных поездок в данной станции за данных год
+
+- общее количество поездок начавшихся или закончившихся в данной станции за данных год
+
+- средняя продолжительность поездок начавшихся в данной станции в данном году
+
+- средняя продолжительность поездок завершившихся в данной станции в данном году
+
+```sql
+SELECT
+  year,
+  start_station_id AS station_id,
+  COUNT(CASE WHEN start_station_id IS NOT NULL THEN 1 ELSE NULL END) AS trips_started,
+  COUNT(CASE WHEN end_station_id IS NOT NULL THEN 1 ELSE NULL END) AS trips_ended,
+  COUNT(CASE WHEN start_station_id IS NOT NULL OR end_station_id IS NOT NULL THEN 1 ELSE NULL END) AS total_trips,
+  ROUND(AVG(CASE WHEN start_station_id IS NOT NULL THEN duration_minutes ELSE NULL END)::numeric, 2) AS avg_duration_started,
+  ROUND(AVG(CASE WHEN end_station_id IS NOT NULL THEN duration_minutes ELSE NULL END)::numeric, 2) AS avg_duration_ended
+FROM bikeshare_trips
+WHERE year BETWEEN 2013 AND 2017
+GROUP BY year, station_id
+ORDER BY year, station_id;
+```
+
+Для уточнения
+
+- Станции должны быть активными
+
+- Станции в итоговой витрине должны быть отсортированы по средней продолжительности поездок начавшихся в данной станции
+
+```sql
+SELECT
+  year,
+  start_station_id AS station_id,
+  COUNT(CASE WHEN start_station_id IS NOT NULL THEN 1 ELSE NULL END) AS trips_started,
+  COUNT(CASE WHEN end_station_id IS NOT NULL THEN 1 ELSE NULL END) AS trips_ended,
+  COUNT(CASE WHEN start_station_id IS NOT NULL OR end_station_id IS NOT NULL THEN 1 ELSE NULL END) AS total_trips,
+  ROUND(AVG(CASE WHEN start_station_id IS NOT NULL THEN duration_minutes ELSE NULL END)::numeric, 2) AS avg_duration_started,
+  ROUND(AVG(CASE WHEN end_station_id IS NOT NULL THEN duration_minutes ELSE NULL END)::numeric, 2) AS avg_duration_ended
+FROM bikeshare_trips
+WHERE year BETWEEN 2013 AND 2017
+      AND start_station_id IS NOT NULL  -- Исключение строк с NULL в start_station_id
+GROUP BY year, station_id
+ORDER BY year, avg_duration_started DESC, station_id;
+```
+
+Топ 10 названия станций с самым высоким показателем средней продолжительности начавшихся поездок за 2016 год
+
+1. Trinity & 6th Street
+2. Guadalupe & 21st
+3. East 6th & Pedernales St.
+4. State Capitol Visitors Garage @ San Jacinto & 12th
+5. MoPac Pedestrian Bridge @ Veterans Drive
+6. Zilker Park
+7. Barton Springs Pool
+8. Rainey St @ Cummings
+9. East 2nd & Pedernales
+10. East 7th & Pleasant Valley
+
+```sql
+SELECT
+  start_station_name,
+  ROUND(AVG(duration_minutes)::numeric, 2) AS avg_duration_started
+FROM bikeshare_trips
+WHERE year = 2016
+  AND start_station_id IS NOT NULL
+GROUP BY start_station_name
+ORDER BY avg_duration_started DESC
+LIMIT 10;
+```
